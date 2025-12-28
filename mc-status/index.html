@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Minecraft Server Status</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Minecraft風フォント -->
+<link href="https://fonts.cdnfonts.com/css/minecraft-4" rel="stylesheet">
+
+<style>
+body {
+  margin: 0;
+  background: #3a3a3a;
+  font-family: 'Minecraft', monospace;
+  color: #fff;
+}
+
+.container {
+  max-width: 420px;
+  margin: 40px auto;
+  background: #2b2b2b;
+  border: 4px solid #111;
+  padding: 16px;
+}
+
+.title {
+  text-align: center;
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+
+.card {
+  background: #1e1e1e;
+  border: 3px solid #000;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.label {
+  color: #aaa;
+  font-size: 12px;
+}
+
+.value {
+  font-size: 16px;
+  margin-top: 4px;
+}
+
+.online { color: #55ff55; }
+.offline { color: #ff5555; }
+
+.footer {
+  text-align: center;
+  font-size: 10px;
+  color: #888;
+  margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+  <div class="title">⛏ Server Status</div>
+
+  <div class="card">
+    <div class="label">稼働状態</div>
+    <div class="value" id="state">取得中...</div>
+  </div>
+
+  <div class="card">
+    <div class="label">稼働時間</div>
+    <div class="value" id="uptime">-</div>
+  </div>
+
+  <div class="card">
+    <div class="label">CPU負荷</div>
+    <div class="value" id="cpu">-</div>
+  </div>
+
+  <div class="card">
+    <div class="label">メモリ使用量</div>
+    <div class="value" id="memory">-</div>
+  </div>
+
+  <div class="card">
+    <div class="label">ストレージ</div>
+    <div class="value" id="disk">-</div>
+  </div>
+
+  <div class="card">
+    <div class="label">ネットワーク (IN / OUT)</div>
+    <div class="value" id="network">-</div>
+  </div>
+
+  <div class="footer">Powered by Pterodactyl</div>
+</div>
+
+<script>
+const API_URL = "https://p-d.f5.si/status.php"; // ← PHPのURL
+
+function secToText(sec) {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  return `${h}時間 ${m}分 ${s}秒`;
+}
+
+fetch(API_URL)
+  .then(res => res.json())
+  .then(d => {
+    document.getElementById("state").textContent =
+      d.state === "running" ? "オンライン" : "オフライン";
+    document.getElementById("state").className =
+      "value " + (d.state === "running" ? "online" : "offline");
+
+    document.getElementById("uptime").textContent =
+      secToText(d.uptime);
+
+    document.getElementById("cpu").textContent =
+      d.cpu_absolute.toFixed(2) + " %";
+
+    document.getElementById("memory").textContent =
+      (d.memory_bytes / 1024 / 1024 / 1024).toFixed(2) + " GiB";
+
+    document.getElementById("disk").textContent =
+      (d.disk_bytes / 1024 / 1024).toFixed(2) + " MiB";
+
+    document.getElementById("network").textContent =
+      (d.network_rx_bytes / 1024).toFixed(1) + " KiB / " +
+      (d.network_tx_bytes / 1024).toFixed(1) + " KiB";
+  })
+  .catch(err => {
+    document.getElementById("state").textContent = "取得失敗";
+    document.getElementById("state").className = "value offline";
+    console.error(err);
+  });
+</script>
+</body>
+</html>

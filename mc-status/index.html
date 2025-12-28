@@ -97,7 +97,7 @@ body {
 </div>
 
 <script>
-const API_URL = "https://p-d.f5.si/status.php"; // ← PHPのURL
+const API_URL = "https://p-d.f5.si/status.php";
 
 function secToText(sec) {
   const h = Math.floor(sec / 3600);
@@ -107,7 +107,10 @@ function secToText(sec) {
 }
 
 fetch(API_URL)
-  .then(res => res.json())
+  .then(res => {
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return res.json();
+  })
   .then(d => {
     document.getElementById("state").textContent =
       d.state === "running" ? "オンライン" : "オフライン";
@@ -118,23 +121,24 @@ fetch(API_URL)
       secToText(d.uptime);
 
     document.getElementById("cpu").textContent =
-      d.cpu_absolute.toFixed(2) + " %";
+      d.cpu.toFixed(2) + " %";
 
     document.getElementById("memory").textContent =
-      (d.memory_bytes / 1024 / 1024 / 1024).toFixed(2) + " GiB";
+      (d.memory / 1024 / 1024 / 1024).toFixed(2) + " GiB";
 
     document.getElementById("disk").textContent =
-      (d.disk_bytes / 1024 / 1024).toFixed(2) + " MiB";
+      (d.disk / 1024 / 1024).toFixed(2) + " MiB";
 
     document.getElementById("network").textContent =
-      (d.network_rx_bytes / 1024).toFixed(1) + " KiB / " +
-      (d.network_tx_bytes / 1024).toFixed(1) + " KiB";
+      (d.net_in / 1024).toFixed(1) + " KiB / " +
+      (d.net_out / 1024).toFixed(1) + " KiB";
   })
   .catch(err => {
+    console.error(err);
     document.getElementById("state").textContent = "取得失敗";
     document.getElementById("state").className = "value offline";
-    console.error(err);
   });
 </script>
+
 </body>
 </html>
